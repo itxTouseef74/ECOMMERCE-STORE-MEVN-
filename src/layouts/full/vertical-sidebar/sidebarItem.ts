@@ -91,23 +91,7 @@ to:'/categories'
 
 
 
-  {
-    title: 'Authentication',
-    icon: KeyIcon,
-    to: '/auth',
-    children: [
-      {
-        title: 'Login',
-        icon: CircleIcon,
-        to: '/auth/login'
-      },
-      {
-        title: 'Register',
-        icon: CircleIcon,
-        to: '/auth/register'
-      }
-    ]
-  }
+  
   // {
   //   title: 'Error 404',
   //   icon: BugIcon,

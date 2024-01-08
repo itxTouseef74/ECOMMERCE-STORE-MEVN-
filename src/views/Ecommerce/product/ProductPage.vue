@@ -10,7 +10,7 @@
                         <v-btn color="primary"  dark class="mb-2" v-bind="props" >
                             New Item
                         </v-btn>
-                        
+                      
                     </template>
                     <v-card>
                         <v-card-title>
