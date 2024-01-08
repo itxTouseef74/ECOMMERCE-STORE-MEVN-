@@ -1,0 +1,307 @@
+<template>
+  <v-app>
+    <v-app-bar app color="deep-purple accent-4" dark>
+      <v-app-bar-nav-icon> </v-app-bar-nav-icon>
+      <v-toolbar-title>Dashboard</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-col align="end">
+      <v-btn variant="tonal" v-if="isLoggedIn" @click="logout()" color="red" class="mt-1"
+        >Logout</v-btn
+      ></v-col
+    >
+      <v-btn icon> <v-icon> mdi-heart </v-icon> </v-btn>
+      <v-btn icon>
+        <v-icon>mdi-magnify</v-icon>
+      </v-btn>
+      <v-menu left bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn icon v-bind="attrs" v-on="on">
+            <v-icon>mdi-dots-vertical</v-icon>
+          </v-btn>
+        </template>
+
+        <v-list>
+          <v-list-item v-for="n in 4" :key="n" @click="() => {}">
+            Option {{ n }}
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </v-app-bar>
+  
+  <v-container class="mt-16">
+    <v-row>
+      <v-col md="6" class="mx-auto">
+        <v-card class="bg-green-accent-1">
+          <v-card-title class="text-h6">
+            <b>Create Product</b>
+          </v-card-title>
+          <v-card-text>
+            <div class="form-group">
+              <v-text-field v-model="name" label="Product name" required></v-text-field>
+              <v-text-field
+                v-model="price"
+                label="Price"
+                required
+              ></v-text-field>
+              <v-text-field
+                v-model="quantity"
+                label="Quantity"
+                required
+              ></v-text-field>
+            
+
+          
+
+              <v-btn @click="createProduct" color="success">Create Product</v-btn>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+
+      <v-col md="6" class="mx-auto">
+        <v-card class="bg-green-accent-1">
+          <v-card-title class="text-h6">
+            <b>Product List</b>
+          </v-card-title>
+          <v-list class="bg-green-accent-1">
+            <v-list-item  v-for="product in products" :key="product._id">
+              <v-list-item-content>
+                <v-list-item-title>
+                  <b>Title:</b> {{ product.name }}
+                </v-list-item-title>
+                <v-list-item-subtitle>
+                  <b>Price:</b> {{ product.price }}
+                </v-list-item-subtitle>
+                <v-list-item-subtitle>
+                  <b>Quantity:</b>{{ product.quantity }}
+                </v-list-item-subtitle>
+             
+              </v-list-item-content>
+              <v-list-item-action>
+                <v-btn @click="deleteTodo(todo.uuid)" color="red" class="mr-1"
+                  >Delete</v-btn
+                >
+                <v-btn @click="openUpdateDialog(todo)" color="primary">Update</v-btn>
+              </v-list-item-action>
+            </v-list-item>
+          </v-list>
+        </v-card>
+      </v-col>
+    </v-row>
+    <v-dialog v-model="showUpdateDialog" max-width="600">
+      <v-card>
+        <v-card-title class="text-h6">
+          <b>Update Todo</b>
+        </v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="updatedTask.todo_name"
+            label="Title"
+            required
+          ></v-text-field>
+          <v-text-field
+            v-model="updatedTask.todo_description"
+            label="Description"
+            required
+          ></v-text-field>
+          <v-text-field
+            v-model="updatedTask.todo_date"
+            label="Task Date"
+            type="date"
+            required
+          ></v-text-field>
+          <v-select
+            v-model="updatedTask.todo"
+            :items="['Incomplete', 'Completed']"
+            label="Status"
+            required
+          ></v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="updateTodo" color="primary">Update</v-btn>
+          <v-btn @click="closeUpdateDialog" color="red">Cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-container>
+</v-app>
+ 
+</template>
+
+<script>
+export default {
+
+  name: "Ecommerce",
+  data() {
+    return {
+      name: "",
+      price: "",
+      quantity: "",
+     
+      products: [],
+      isLoggedIn: false,
+      showUpdateDialog: false,
+      updatedTask: {
+        uuid: null,
+        todo_name: "",
+        todo_description: "",
+        is_completed: "",
+        todo_date: "",
+      },
+    };
+  },
+  created() {
+    if (localStorage.getItem("token")) {
+      this.isLoggedIn = true;
+    }
+    this.getProduct()
+   
+  },
+  methods: {
+    async getProduct() {
+  try {
+    const token = localStorage.getItem("token");
+    const requestOptions = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token,
+      },
+    };
+
+    const response = await fetch('http://localhost:4000/product', requestOptions);
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+
+    console.log('Received data from the server:', data);
+
+if (Array.isArray(data)) {
+  this.products = data;
+  console.log('Number of products:', this.products.length);
+} else {
+  console.error('Invalid data format received from the server:', data);
+}
+  } catch (error) {
+    console.error("Error fetching todos:", error);
+  }
+}
+,
+  createProduct() {
+  const token = localStorage.getItem("token");
+  const requestOptions = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token,
+    },
+    body: JSON.stringify({
+      name: this.name,
+      price: this.price,
+      quantity: this.quantity,
+
+    }),
+  };
+
+  fetch('http://localhost:4000/product', requestOptions)
+    .then((response) => {
+      if (response.status === 201) {
+        console.log('Product created successfully!' );
+        return response.json();
+      } else {
+        console.error('Failed to create product. Status:', response.status);
+        
+        throw new Error('Failed to create product.');
+      }
+    })
+    .then(() => {
+      
+      this.getProduct();
+      this.name = '';
+      this.price = '';
+      this.quantity = '';
+     
+    })
+    .catch((error) => {
+      console.error('Error creating product:', error);
+    });
+},
+
+    deleteTodo(uuid) {
+      const token = localStorage.getItem("token");
+      const requestOptions = {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ uuid: uuid }),
+      };
+
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/todo/delete/`, requestOptions)
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          this.getProduct();
+        });
+    },
+    openUpdateDialog(todo) {
+      this.showUpdateDialog = true;
+      this.updatedTask = {
+        ...todo,
+        todo: todo.is_completed ? "Completed" : "Incomplete",
+      };
+    },
+    closeUpdateDialog() {
+      this.showUpdateDialog = false;
+    },
+
+    updateTodo(uuid, is_completed) {
+      const token = localStorage.getItem("token");
+      const requestOptions = {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          uuid: this.updatedTask.uuid,
+          todo_name: this.updatedTask.todo_name,
+          todo_description: this.updatedTask.todo_description,
+          todo_date: this.updatedTask.todo_date,
+          is_completed: this.updatedTask.todo === "Completed" ? true : false,
+        }),
+      };
+
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/todo/`, requestOptions)
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          this.getProduct();
+          this.closeUpdateDialog();
+        });
+    },
+    displayStatus(todo) {
+      return todo ? "Completed" : "Incomplete";
+    },
+    displayStatusColor(isCompleted) {
+      return isCompleted ? "green" : "red";
+    },
+    logout() {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    },
+  },
+};
+
+
+</script>
+
+<style>
+body {
+  background-color: rgb(175, 211, 238);
+}
+</style>
