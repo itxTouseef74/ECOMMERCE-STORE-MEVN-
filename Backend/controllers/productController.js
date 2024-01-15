@@ -16,7 +16,9 @@ exports.getProducts = async (req, res) => {
     if (existingSeller) {
       const storeDB = await switchDB(storeName, StoreSchema);
       const productModel = await getDBModel(storeDB, 'product');
-      const products = await productModel.find();
+
+      const products = await productModel.find().populate('category', 'cat_name');
+
       res.status(200).json(products);
     } else {
       res.status(400).send('Store does not exist');
@@ -26,9 +28,10 @@ exports.getProducts = async (req, res) => {
   }
 };
 
+
 exports.createProduct = async (req, res) => {
   try {
-    const { name, price, quantity } = req.body;
+    const { name, price, quantity, cat_name } = req.body;
     const token = req.headers.authorization;
 
     if (!token) {
@@ -43,8 +46,15 @@ exports.createProduct = async (req, res) => {
 
     const storeName = decodedToken.storeName;
 
-    if (!name || !price || !quantity) {
-      return res.status(400).json({ error: 'Incomplete product information' });
+    const missingFields = [];
+    if (!name) missingFields.push('name');
+    if (!price) missingFields.push('price');
+    if (!quantity) missingFields.push('quantity');
+    if (!cat_name) missingFields.push('cat_name');
+
+    if (missingFields.length > 0) {
+      const errorMessage = `Incomplete product information. Missing fields: ${missingFields.join(', ')}`;
+      return res.status(400).json({ error: errorMessage });
     }
 
     const sellerDB = await switchDB('SellerApp', SellerSchema);
@@ -54,8 +64,17 @@ exports.createProduct = async (req, res) => {
     if (existingSeller) {
       const storeDB = await switchDB(storeName, StoreSchema);
       const productModel = await getDBModel(storeDB, 'product');
-      await productModel.create({ ...req.body, storeName });
-      res.status(201).json({ message: 'Product created successfully' });
+      const categoryModel = await getDBModel(storeDB, 'category');
+
+      const category = await categoryModel.findOne({ cat_name: req.body.cat_name });
+
+
+      if (category) {
+        await productModel.create({ name, price, quantity, category: category._id, storeName });
+        res.status(201).json({ message: 'Product created successfully' });
+      } else {
+        res.status(400).json({ error: 'Category does not exist' });
+      }
     } else {
       res.status(400).json({ error: 'Store does not exist' });
     }
@@ -63,6 +82,7 @@ exports.createProduct = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 function decodeToken(token) {
   try {
@@ -78,6 +98,7 @@ exports.updateProduct = async (req, res) => {
   try {
     const { productId } = req.params;
     const { storeName } = req.seller;
+    const { name, price, quantity, cat_name } = req.body;
 
     const sellerDB = await switchDB('SellerApp', SellerSchema);
     const sellerModel = await getDBModel(sellerDB, 'Seller');
@@ -86,17 +107,38 @@ exports.updateProduct = async (req, res) => {
     if (existingSeller) {
       const storeDB = await switchDB(storeName, StoreSchema);
       const productModel = await getDBModel(storeDB, 'product');
+      const categoryModel = await getDBModel(storeDB, 'category');
 
-      await productModel.findByIdAndUpdate(productId, req.body);
+      const existingProduct = await productModel.findById(productId);
 
-      res.status(200).send('Product updated successfully');
+      if (existingProduct) {
+        
+        if (name) existingProduct.name = name;
+        if (price) existingProduct.price = price;
+        if (quantity) existingProduct.quantity = quantity;
+        
+        if (cat_name) {
+          const category = await categoryModel.findOne({ cat_name });
+          if (category) {
+            existingProduct.category = category._id;
+          } else {
+            return res.status(400).json({ error: 'Category does not exist' });
+          }
+        }
+
+        await existingProduct.save();
+        res.status(200).json({ message: 'Product updated successfully' });
+      } else {
+        res.status(400).json({ error: 'Product does not exist' });
+      }
     } else {
-      res.status(400).send('Store does not exist');
+      res.status(400).json({ error: 'Store does not exist' });
     }
   } catch (error) {
-    res.status(500).send({ message: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.deleteProduct = async (req, res) => {
   try {
@@ -123,18 +165,20 @@ exports.deleteProduct = async (req, res) => {
 };
 
 const switchDB = async (dbName, dbSchema) => {
-  const mongoose = await connectDB();
-  if (mongoose.connection.readyState === 1) {
-    const db = mongoose.connection.useDb(dbName, { useCache: true });
-    if (!Object.keys(db.models).length) {
+    const mongoose = await connectDB();
+    if (mongoose.connection.readyState === 1) {
+      const db = mongoose.connection.useDb(dbName, { useCache: true });
       dbSchema.forEach((schema, modelName) => {
-        db.model(modelName, schema);
+        if (!db.models[modelName]) {
+          db.model(modelName, schema);
+        }
       });
+  
+      return db;
     }
-    return db;
-  }
-  throw new Error('Error connecting to the database');
-};
+    throw new Error('Error connecting to the database');
+  };
+  
 
 const getDBModel = async (db, modelName) => {
   return db.model(modelName);

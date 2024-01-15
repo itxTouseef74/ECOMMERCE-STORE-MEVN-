@@ -10,10 +10,14 @@ const productSchema = new mongoose.Schema({
     price:{
         type:Number,
         required:true
-},
+   },
 quantity:{
     type:Number,
     required:true
+},
+ category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'category'
 },
 storeName:{
     type:String,
@@ -22,6 +26,6 @@ storeName:{
    
 
 }
-})
+},{timestamps:true})
 
 module.exports = productSchema

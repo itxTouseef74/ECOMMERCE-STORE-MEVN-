@@ -1,117 +1,28 @@
-<template>
-    <v-data-table :headers="headers" :items="desserts" :sort-by="[{ key: 'calories', order: 'asc' }]"
-        class="bg-lightprimary">
-        <template v-slot:top>
-            <v-toolbar flat class="bg-lightprimary">
-                <v-toolbar-title >My PRODUCT</v-toolbar-title>
-                
-                <v-divider class="mx-4" inset vertical></v-divider>
-                <v-spacer></v-spacer>
-                <v-dialog v-model="dialog" max-width="500px">
-                    <template v-slot:activator="{ props }">
-                        <v-btn color="primary" dark class="mb-2" v-bind="props">
-                            New Item
-                        </v-btn>
-                    </template>
-                    <v-card>
-                        <v-card-title>
-                            <span class="text-h5">{{ formTitle }}</span>
-                        </v-card-title>
-
-                        <v-card-text>
-                            <v-container>
-                                <v-row>
-                                    <v-col cols="12" sm="6" md="4">
-                                        <v-text-field v-model="editedItem.name" label="Dessert name"></v-text-field>
-                                    </v-col>
-                                    <v-col cols="12" sm="6" md="4">
-                                        <v-text-field v-model="editedItem.calories" label="Calories"></v-text-field>
-                                    </v-col>
-                                    <v-col cols="12" sm="6" md="4">
-                                        <v-text-field v-model="editedItem.fat" label="Fat (g)"></v-text-field>
-                                    </v-col>
-                                    <v-col cols="12" sm="6" md="4">
-                                        <v-text-field v-model="editedItem.carbs" label="Carbs (g)"></v-text-field>
-                                    </v-col>
-                                    <v-col cols="12" sm="6" md="4">
-                                        <v-text-field v-model="editedItem.protein" label="Protein (g)"></v-text-field>
-                                    </v-col>
-                                </v-row>
-                            </v-container>
-                        </v-card-text>
-
-                        <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn color="primary" variant="text" @click="close">
-                                Cancel
-                            </v-btn>
-                            <v-btn color="success" variant="text" @click="save">
-                                Save
-                            </v-btn>
-                        </v-card-actions>
-                    </v-card>
-                </v-dialog>
-                <v-dialog v-model="dialogDelete" max-width="500px">
-                    <v-card>
-                        <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
-                        <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn color="primary" variant="text" @click="closeDelete">Cancel</v-btn>
-                            <v-btn color="lightindigo" variant="text" @click="deleteItemConfirm">OK</v-btn>
-                            <v-spacer></v-spacer>
-                        </v-card-actions>
-                    </v-card>
-                </v-dialog>
-            </v-toolbar>
-        </template>
-        <template v-slot:item.actions="{ item }">
-            <v-icon size="small" class="me-2" @click="editItem(item)" color="primary">
-                mdi-pencil
-            </v-icon>
-            <v-icon size="small" @click="deleteItem(item)" color="lightindigo">
-                mdi-delete
-            </v-icon>
-        </template>
-        <template v-slot:no-data>
-            <v-btn color="primary" @click="initialize">
-                Reset
-            </v-btn>
-        </template>
-    </v-data-table>
-</template>
-<script>
 export default {
     data: () => ({
         dialog: false,
         dialogDelete: false,
         headers: [
-            {
-                title: 'Dessert (100g serving)',
-                align: 'start',
-                sortable: false,
-                key: 'name',
-            },
-            { title: 'Calories', key: 'calories' },
-            { title: 'Fat (g)', key: 'fat' },
-            { title: 'Carbs (g)', key: 'carbs' },
-            { title: 'Protein (g)', key: 'protein' },
+            { title: 'Product Name', key: 'name' },
+            { title: 'Price', key: 'price' },
+            { title: 'Stock', key: 'quantity' },
+            { title: 'Category', key: 'category' },
             { title: 'Actions', key: 'actions', sortable: false },
         ],
-        desserts: [],
+        products: [],
+        categories: [],
         editedIndex: -1,
         editedItem: {
             name: '',
-            calories: 0,
-            fat: 0,
-            carbs: 0,
-            protein: 0,
+            price: '',
+            quantity: '',
+            category: '',
         },
         defaultItem: {
             name: '',
-            calories: 0,
-            fat: 0,
-            carbs: 0,
-            protein: 0,
+            price: '',
+            quantity: '',
+            category: '',
         },
     }),
 
@@ -131,99 +42,228 @@ export default {
     },
 
     created() {
-        this.initialize()
+        this.getProduct()
     },
 
     methods: {
-        initialize() {
-            this.desserts = [
-                {
-                    name: 'Frozen Yogurt',
-                    calories: 159,
-                    fat: 6.0,
-                    carbs: 24,
-                    protein: 4.0,
-                },
-                {
-                    name: 'Ice cream sandwich',
-                    calories: 237,
-                    fat: 9.0,
-                    carbs: 37,
-                    protein: 4.3,
-                },
-                {
-                    name: 'Eclair',
-                    calories: 262,
-                    fat: 16.0,
-                    carbs: 23,
-                    protein: 6.0,
-                },
-                {
-                    name: 'Cupcake',
-                    calories: 305,
-                    fat: 3.7,
-                    carbs: 67,
-                    protein: 4.3,
-                },
-                {
-                    name: 'Gingerbread',
-                    calories: 356,
-                    fat: 16.0,
-                    carbs: 49,
-                    protein: 3.9,
-                },
-                {
-                    name: 'Jelly bean',
-                    calories: 375,
-                    fat: 0.0,
-                    carbs: 94,
-                    protein: 0.0,
-                },
-                {
-                    name: 'Lollipop',
-                    calories: 392,
-                    fat: 0.2,
-                    carbs: 98,
-                    protein: 0,
-                },
-                {
-                    name: 'Honeycomb',
-                    calories: 408,
-                    fat: 3.2,
-                    carbs: 87,
-                    protein: 6.5,
-                },
-                {
-                    name: 'Donut',
-                    calories: 452,
-                    fat: 25.0,
-                    carbs: 51,
-                    protein: 4.9,
-                },
-                {
-                    name: 'KitKat',
-                    calories: 518,
-                    fat: 26.0,
-                    carbs: 65,
-                    protein: 7,
-                },
-            ]
-        },
 
-        editItem(item) {
-            this.editedIndex = this.desserts.indexOf(item)
-            this.editedItem = Object.assign({}, item)
-            this.dialog = true
-        },
+      async saveProduct() {
+        if (this.editedIndex > -1) {
+          await this.updateProduct();
+        } else {
+          await this.createProduct();
+        }
+      },
 
+    async getProduct() {
+      try {
+          const token = localStorage.getItem('token');
+          const productRequestOptions = {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: token,
+              },
+          };
+          const categoryRequestOptions = {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: token,
+              },
+          };
+  
+          const [productResponse, categoryResponse] = await Promise.all([
+              fetch(`${import.meta.env.VITE_API_BASE_URL}/product`, productRequestOptions),
+              fetch(`${import.meta.env.VITE_API_BASE_URL}/category`, categoryRequestOptions),
+          ]);
+  
+          if (!productResponse.ok || !categoryResponse.ok) {
+              throw new Error('Something went wrong');
+          }
+  
+          const productData = await productResponse.json();
+          const categoryData = await categoryResponse.json();
+  
+          if (Array.isArray(productData) && Array.isArray(categoryData)) {
+              this.products = productData.map(product => ({
+                  ...product,
+                  category: product.category ? product.category.cat_name : null,
+              }));
+  
+              this.categories = categoryData.map(category => category.cat_name);
+              console.log("Fetched categories:", this.categories);
+              console.log(this.products.length, 'products');
+              console.log(this.categories.length, 'categories');
+          } else {
+              console.error('Invalid data from the server', productData, categoryData);
+          }
+      } catch (error) {
+          console.log('There is a fetching error of products or categories', error);
+      }
+  },
+  
+    
+  async createProduct() {
+    try {
+
+        const category = await this.findCategoryByNameAsync(this.editedItem.category);
+
+        if (!category) {
+            console.error("Category not found");
+            return;
+        }
+
+        console.log("Creating product with category:", category);
+
+        const token = localStorage.getItem("token");
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: token,
+            },
+            body: JSON.stringify({
+                name: this.editedItem.name,
+                price: this.editedItem.price,
+                quantity: this.editedItem.quantity,
+                cat_name: this.editedItem.category,
+            }),
+        };
+
+        console.log("Request payload:", requestOptions.body);
+
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/product`, requestOptions);
+
+console.log("Server response:", response.status, response.statusText);
+
+if (response.status === 201) {
+    console.log('Product created successfully!');
+    this.getProduct();
+    this.close();
+    return response.json();
+} else {
+    const errorResponse = await response.json();
+    console.error('Failed to create product. Status:', response.status);
+    console.error('Server error response:', errorResponse);
+    throw new Error('Failed to create product.');
+}
+    } catch (error) {
+        console.error('Error creating product:', error);
+    }
+}
+,
+
+async findCategoryByNameAsync(categoryName) {
+  try {
+      const trimmedLowerCaseName = categoryName ? categoryName.trim().toLowerCase() : '';
+
+      const token = localStorage.getItem('token');
+      const requestOptions = {
+          method: 'GET',
+          headers: {
+              'Content-Type': 'application/json',
+              Authorization: token,
+          },
+      };
+
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/category`, requestOptions);
+      const categoryData = await response.json();
+
+      if (Array.isArray(categoryData)) {
+          const foundCategory = categoryData.find(category =>
+              category.cat_name.trim().toLowerCase() === trimmedLowerCaseName
+          );
+
+          if (foundCategory) {
+              console.log('Found category:', foundCategory);
+              return foundCategory;
+          } else {
+              console.error('Category not found. Trimmed and lowercased search:', trimmedLowerCaseName);
+              return null;
+          }
+      } else {
+          console.error('Invalid data for categories from the server', categoryData);
+          return null;
+      }
+  } catch (error) {
+      console.log('Error fetching categories:', error);
+      return null;
+  }
+}
+
+,
+  async updateProduct() {
+    const token = localStorage.getItem('token');
+    const requestOptions = {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+      body: JSON.stringify({
+        name: this.editedItem.name,
+        price: this.editedItem.price,
+        quantity: this.editedItem.quantity,
+        category: this.findCategoryByNameAsync(this.editedItem.category)._id, 
+      }),
+    };
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/product/${this.editedItem._id}`, requestOptions);
+
+      if (!response.ok) {
+        throw new Error('Failed to update product. Status:', response.status);
+      }
+
+      console.log('Product updated successfully!');
+      this.getProduct();
+      this.close();
+    } catch (error) {
+      console.error('Error updating product:', error);
+    }
+  },
+
+
+
+
+async deleteProduct() {
+    const token = localStorage.getItem('token');
+    const requestOptions = {
+        method: 'DELETE',
+        headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+        },
+    };
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/product/${this.editedItem._id}`, requestOptions);
+    
+        if (!response.ok) {
+        throw new Error('Failed to delete product. Status:', response.status);
+        }
+    
+        console.log('Product deleted successfully!');
+        this.getProduct(); 
+        this.closeDelete();  
+    } catch (error) {
+        console.error('Error deleting product:', error);
+    }
+    },
+
+  async editItem(item) {
+      this.editedIndex = this.products.indexOf(item);
+      this.editedItem = { ...item };
+      this.dialog = true;
+    },
         deleteItem(item) {
-            this.editedIndex = this.desserts.indexOf(item)
+            this.editedIndex = this.products.indexOf(item)
             this.editedItem = Object.assign({}, item)
             this.dialogDelete = true
         },
 
         deleteItemConfirm() {
-            this.desserts.splice(this.editedIndex, 1)
+            this.products.splice(this.editedIndex, 1)
             this.closeDelete()
         },
 
@@ -245,12 +285,11 @@ export default {
 
         save() {
             if (this.editedIndex > -1) {
-                Object.assign(this.desserts[this.editedIndex], this.editedItem)
+                Object.assign(this.products[this.editedIndex], this.editedItem)
             } else {
-                this.desserts.push(this.editedItem)
+                this.products.push(this.editedItem)
             }
             this.close()
         },
     },
 }
-</script>

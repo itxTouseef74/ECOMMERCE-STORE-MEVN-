@@ -1,10 +1,10 @@
 const mongoose = require("mongoose")
-
+require('dotenv').config();
 function connectDB() {
   return new Promise((resolve, reject) => {
-    const mongoURL = `mongodb+srv://touseefhussain:Touseef2252@multi-tenancy.nps71wk.mongodb.net/?retryWrites=true&w=majority`
+    const mongodbURL = process.env.MONGODB_URI;
     mongoose
-      .connect(mongoURL)
+      .connect(mongodbURL)
       .then((conn) => {
         console.log('connected')
         resolve(conn)

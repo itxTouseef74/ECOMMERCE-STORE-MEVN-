@@ -7,5 +7,4 @@ router.post("/product", authMiddleware.verifyToken, productController.createProd
 router.get("/product", authMiddleware.verifyToken, productController.getProducts);
 router.put("/product/:productId", authMiddleware.verifyToken, productController.updateProduct);
 router.delete("/product/:productId", authMiddleware.verifyToken, productController.deleteProduct);
-
 module.exports = router;
